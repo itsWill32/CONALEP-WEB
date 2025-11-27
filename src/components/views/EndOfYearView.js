@@ -9,7 +9,11 @@ import {
   Calendar,
   GraduationCap,
   Database,
-  RefreshCw
+  RefreshCw,
+  ShieldAlert,
+  Eraser,
+  History,
+  Info
 } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 import { useGradosGrupos } from '@/hooks/useGradosGrupos';
@@ -26,7 +30,7 @@ export default function EndOfYearView() {
     deleteGrupoCompleto
   } = useData();
 
-  const { grados, grupos, refresh: refreshGradosGrupos } = useGradosGrupos();
+  const { refresh: refreshGradosGrupos } = useGradosGrupos();
   
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [actionType, setActionType] = useState(null);
@@ -122,7 +126,7 @@ export default function EndOfYearView() {
   const getModalMessage = () => {
     switch(actionType) {
       case 'promote':
-        return 'Esta acción incrementará el grado de TODOS los alumnos (excepto los de 6to). Los alumnos de 6to no serán afectados. Esta acción no se puede deshacer.';
+        return 'Esta acción incrementará el grado de TODOS los alumnos. IMPORTANTE: Asegúrate de haber eliminado a los alumnos de 6to grado antes de continuar, o permanecerán en el sistema sin grado válido.';
       case 'demote':
         return 'Esta acción reducirá el grado de TODOS los alumnos en 1 (excepto los de 1er grado). Esta acción no se puede deshacer.';
       case 'deleteEnrollments':
@@ -136,264 +140,172 @@ export default function EndOfYearView() {
     }
   };
 
+  // --- Estilos Reutilizables ---
+  const cardBaseStyle = {
+    background: 'white',
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%', // Forzar altura completa
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+  };
+
   return (
     <>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header de advertencia */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '40px' }}>
+        
+        {/* --- HEADER DE ADVERTENCIA (Más sobrio) --- */}
         <div style={{
-          background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%)',
+          background: '#fff',
+          borderLeft: '4px solid #f59e0b',
+          borderRadius: '8px',
           padding: '24px',
-          borderRadius: '16px',
           marginBottom: '30px',
-          border: '2px solid #fbbf24',
           display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
+          gap: '20px',
+          alignItems: 'flex-start',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
         }}>
-          <div style={{
-            background: '#f59e0b',
-            padding: '12px',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <AlertTriangle size={32} color="white" />
+          <div style={{ color: '#f59e0b', marginTop: '4px' }}>
+            <ShieldAlert size={28} />
           </div>
           <div>
-            <h3 style={{ color: '#92400e', marginBottom: '8px', fontSize: '1.3rem' }}>
-              Gestión de Fin de Curso
-            </h3>
-            <p style={{ color: '#78350f', fontSize: '0.95rem', lineHeight: '1.6' }}>
-              Esta sección contiene operaciones destructivas que afectan a múltiples registros. 
-              Todas las acciones requieren confirmación de contraseña y <strong>no se pueden deshacer</strong>.
+            <h2 style={{ marginTop: 0, marginBottom: '8px', color: '#1e293b', fontSize: '1.4rem', fontWeight: 700 }}>
+              Gestión de Fin de Ciclo Escolar
+            </h2>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              Las siguientes acciones realizan cambios masivos en la base de datos. 
+              Asegúrese de contar con un respaldo y verificar la información antes de proceder. 
+              Todas las operaciones requieren contraseña de administrador.
             </p>
           </div>
         </div>
 
-        {/* Grid de acciones */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px',
-          marginBottom: '30px'
+        {/* --- GRID DE ACCIONES PRINCIPALES --- */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '40px' 
         }}>
-          {/* Promover alumnos */}
-          <div className="content-card" style={{ border: '2px solid #d1fae5' }}>
-            <div style={{ padding: '24px' }}>
-              <div style={{
-                background: '#d1fae5',
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px'
-              }}>
-                <TrendingUp size={24} color="#059669" />
+          
+          {/* 1. Promover Alumnos */}
+          <div className="action-card" style={cardBaseStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', color: '#334155' }}>
+                <TrendingUp size={24} />
               </div>
-              <h4 style={{ color: '#065f46', marginBottom: '8px' }}>Promover Alumnos</h4>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '16px' }}>
-                Incrementa el grado de todos los alumnos. Los de 6to no serán afectados.
-              </p>
-              <button
-                onClick={() => handleActionClick('promote')}
-                className="btn"
-                style={{ 
-                  width: '100%',
-                  background: '#10b981',
-                  color: 'white'
-                }}
-              >
-                <TrendingUp size={18} style={{ marginRight: '8px' }} />
-                Promover Todos
-              </button>
             </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', marginBottom: '10px' }}>Promover Alumnos</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', flex: 1, marginBottom: '20px' }}>
+              Aumenta el grado de todos los alumnos. <br/>
+              <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ Elimina a los alumnos de 6to antes de ejecutar esto.</span>
+            </p>
+            <button onClick={() => handleActionClick('promote')} className="btn-action primary">
+              Promover Todos
+            </button>
           </div>
 
-          {/* Degradar alumnos */}
-          <div className="content-card" style={{ border: '2px solid #fee2e2' }}>
-            <div style={{ padding: '24px' }}>
-              <div style={{
-                background: '#fee2e2',
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px'
-              }}>
-                <TrendingDown size={24} color="#dc2626" />
+          {/* 2. Degradar Alumnos */}
+          <div className="action-card" style={cardBaseStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', color: '#334155' }}>
+                <TrendingDown size={24} />
               </div>
-              <h4 style={{ color: '#991b1b', marginBottom: '8px' }}>Degradar Alumnos</h4>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '16px' }}>
-                Reduce el grado de todos los alumnos en 1. Los de 1er grado no serán afectados.
-              </p>
-              <button
-                onClick={() => handleActionClick('demote')}
-                className="btn"
-                style={{ 
-                  width: '100%',
-                  background: '#ef4444',
-                  color: 'white'
-                }}
-              >
-                <TrendingDown size={18} style={{ marginRight: '8px' }} />
-                Degradar Todos
-              </button>
             </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', marginBottom: '10px' }}>Degradar Alumnos</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', flex: 1, marginBottom: '20px' }}>
+              Reduce el grado de todos los alumnos en un nivel. Útil solo para correcciones de promociones erróneas.
+            </p>
+            <button onClick={() => handleActionClick('demote')} className="btn-action danger-outline">
+              Degradar Todos
+            </button>
           </div>
 
-          {/* Eliminar inscripciones */}
-          <div className="content-card" style={{ border: '2px solid #fef3c7' }}>
-            <div style={{ padding: '24px' }}>
-              <div style={{
-                background: '#fef3c7',
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px'
-              }}>
-                <GraduationCap size={24} color="#d97706" />
+          {/* 3. Limpiar Inscripciones */}
+          <div className="action-card" style={cardBaseStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', color: '#334155' }}>
+                <Eraser size={24} />
               </div>
-              <h4 style={{ color: '#92400e', marginBottom: '8px' }}>Limpiar Inscripciones</h4>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '16px' }}>
-                Elimina todas las inscripciones de todas las clases. Los alumnos permanecerán.
-              </p>
-              <button
-                onClick={() => handleActionClick('deleteEnrollments')}
-                className="btn"
-                style={{ 
-                  width: '100%',
-                  background: '#f59e0b',
-                  color: 'white'
-                }}
-              >
-                <Trash2 size={18} style={{ marginRight: '8px' }} />
-                Eliminar Inscripciones
-              </button>
             </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', marginBottom: '10px' }}>Reiniciar Inscripciones</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', flex: 1, marginBottom: '20px' }}>
+              Elimina todas las relaciones entre alumnos y clases. Mantiene los perfiles de alumnos intactos.
+            </p>
+            <button onClick={() => handleActionClick('deleteEnrollments')} className="btn-action warning-outline">
+              Eliminar Inscripciones
+            </button>
           </div>
 
-          {/* Eliminar asistencias */}
-          <div className="content-card" style={{ border: '2px solid #e0e7ff' }}>
-            <div style={{ padding: '24px' }}>
-              <div style={{
-                background: '#e0e7ff',
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px'
-              }}>
-                <Calendar size={24} color="#4f46e5" />
+          {/* 4. Limpiar Asistencias */}
+          <div className="action-card" style={cardBaseStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', color: '#334155' }}>
+                <History size={24} />
               </div>
-              <h4 style={{ color: '#3730a3', marginBottom: '8px' }}>Limpiar Asistencias</h4>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '16px' }}>
-                Elimina todos los registros de asistencia de todas las clases.
-              </p>
-              <button
-                onClick={() => handleActionClick('deleteAttendances')}
-                className="btn"
-                style={{ 
-                  width: '100%',
-                  background: '#6366f1',
-                  color: 'white'
-                }}
-              >
-                <Calendar size={18} style={{ marginRight: '8px' }} />
-                Eliminar Asistencias
-              </button>
             </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', marginBottom: '10px' }}>Limpiar Asistencias</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', flex: 1, marginBottom: '20px' }}>
+              Borra el historial completo de asistencias para liberar espacio al iniciar un nuevo ciclo.
+            </p>
+            <button onClick={() => handleActionClick('deleteAttendances')} className="btn-action info-outline">
+              Eliminar Historial
+            </button>
           </div>
         </div>
 
-        {/* Eliminar grupos - Nueva UX */}
-        <div className="content-card" style={{ border: '2px solid #fee2e2' }}>
-          <div className="card-header" style={{ background: '#fef2f2', borderBottom: '2px solid #fee2e2' }}>
+        {/* --- SECCIÓN: ELIMINAR GRUPOS COMPLETOS (Útil para borrar 6tos) --- */}
+        <div style={{ ...cardBaseStyle, border: '1px solid #e2e8f0', padding: '0', overflow: 'hidden', marginBottom: '30px' }}>
+          <div style={{ 
+            padding: '20px 24px', 
+            background: '#f8fafc', 
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                background: '#fecaca',
-                padding: '10px',
-                borderRadius: '10px',
-                display: 'flex'
-              }}>
-                <Users size={24} color="#dc2626" />
+              <Users size={20} color="#475569" />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', fontWeight: 600 }}>Gestión de Grupos Activos</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: '#64748b' }}>Utilice esta sección para eliminar grupos salientes (ej. 6to Grado)</p>
               </div>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ color: '#991b1b' }}>Eliminar Grupos Completos</h4>
-                <p style={{ fontSize: '0.85rem', color: '#7f1d1d', margin: 0 }}>
-                  Grupos existentes con alumnos registrados
-                </p>
-              </div>
-              <button
-                onClick={fetchGruposConAlumnos}
-                className="btn btn-outline"
-                style={{ padding: '8px 16px' }}
-                disabled={loadingGroups}
-              >
-                <RefreshCw size={16} style={{ marginRight: '6px' }} />
-                Actualizar
-              </button>
             </div>
+            <button onClick={fetchGruposConAlumnos} disabled={loadingGroups} className="btn-refresh">
+              <RefreshCw size={16} className={loadingGroups ? 'spin' : ''} /> Actualizar
+            </button>
           </div>
-          <div style={{ padding: '20px' }}>
+
+          <div style={{ padding: '24px', background: 'white' }}>
             {loadingGroups ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                Cargando grupos...
+              <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                <RefreshCw size={24} className="spin" style={{ marginBottom: '10px' }} />
+                <p style={{fontSize: '0.9rem'}}>Cargando grupos...</p>
               </div>
             ) : gruposConAlumnos.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                <Users size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-                <p>No hay grupos con alumnos registrados</p>
+              <div style={{ textAlign: 'center', padding: '30px', border: '1px dashed #e2e8f0', borderRadius: '12px' }}>
+                <p style={{ color: '#94a3b8', margin: 0 }}>No hay grupos con alumnos inscritos.</p>
               </div>
             ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                gap: '12px'
-              }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                 {gruposConAlumnos.map((grupo) => (
-                  <div
-                    key={`${grupo.grado}-${grupo.grupo}`}
-                    style={{
-                      padding: '16px',
-                      border: '2px solid #fee2e2',
-                      borderRadius: '12px',
-                      background: '#fef2f2',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      transition: '0.2s'
-                    }}
-                  >
+                  <div key={`${grupo.grado}-${grupo.grupo}`} className="group-card">
                     <div>
-                      <div style={{ 
-                        fontSize: '1.3rem', 
-                        fontWeight: 700, 
-                        color: '#991b1b',
-                        marginBottom: '4px'
-                      }}>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#334155' }}>
                         {grupo.grado}° {grupo.grupo}
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#7f1d1d' }}>
-                        {grupo.total} alumno{grupo.total !== 1 ? 's' : ''}
+                      <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
+                        {grupo.total} Alumnos
                       </div>
                     </div>
-                    <button
+                    <button 
                       onClick={() => handleActionClick('deleteGroup', grupo)}
-                      className="btn-icon-danger"
-                      style={{ padding: '8px' }}
-                      title={`Eliminar grupo ${grupo.grado}°${grupo.grupo}`}
+                      className="btn-delete-group"
+                      title="Eliminar este grupo completo"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
@@ -402,26 +314,25 @@ export default function EndOfYearView() {
           </div>
         </div>
 
-        {/* Info adicional */}
-        <div style={{
-          marginTop: '30px',
-          padding: '20px',
-          background: '#f8fafc',
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <Database size={20} color="#64748b" />
-            <h4 style={{ color: '#334155', margin: 0 }}>Recomendaciones</h4>
+        {/* --- RECOMENDACIONES (Actualizado) --- */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <Info size={20} color="#3b82f6" style={{ marginTop: '2px', flexShrink: 0 }} />
+          <div>
+            <h4 style={{ margin: '0 0 8px', color: '#1e293b', fontSize: '0.95rem', fontWeight: 600 }}>Recomendaciones de Flujo de Trabajo</h4>
+            <ul style={{ margin: 0, paddingLeft: '18px', color: '#475569', fontSize: '0.9rem', lineHeight: '1.6' }}>
+              <li style={{ marginBottom: '6px' }}>
+                <strong style={{ color: '#ef4444' }}>Paso 1:</strong> Elimine manualmente los <strong>grupos de 6to grado</strong> (o el grado saliente) utilizando la sección de "Gestión de Grupos Activos" de arriba. Si no hace esto, los alumnos de 6to se acumularán.
+              </li>
+              <li style={{ marginBottom: '6px' }}>
+                <strong style={{ color: '#0284c7' }}>Paso 2:</strong> Ejecute la acción <strong>"Promover Alumnos"</strong>. Esto pasará a 1ro a 2do, 2do a 3ro, etc.
+              </li>
+              <li>
+                <strong style={{ color: '#f59e0b' }}>Paso 3:</strong> (Opcional) Limpie inscripciones y asistencias para preparar la base de datos para las nuevas cargas académicas.
+              </li>
+            </ul>
           </div>
-          <ul style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-            <li>Realiza estas operaciones al <strong>final del ciclo escolar</strong></li>
-            <li>Se recomienda hacer un <strong>respaldo de la base de datos</strong> antes de ejecutar estas acciones</li>
-            <li>Promover alumnos automáticamente pasará a los de 5to a 6to grado</li>
-            <li>Limpiar inscripciones y asistencias ayuda a <strong>reducir el tamaño de la base de datos</strong></li>
-            <li>Todas estas acciones requieren <strong>contraseña de administrador</strong></li>
-          </ul>
         </div>
+
       </div>
 
       <PasswordConfirmModal
@@ -435,6 +346,73 @@ export default function EndOfYearView() {
         title={getModalTitle()}
         message={getModalMessage()}
       />
+
+      <style jsx global>{`
+        /* Diseño más limpio para los botones de acción */
+        .btn-action {
+          width: 100%;
+          padding: 10px;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: center;
+          border: 1px solid transparent;
+        }
+
+        .btn-action.primary {
+          background: #0f172a;
+          color: white;
+        }
+        .btn-action.primary:hover { background: #334155; }
+
+        .btn-action.danger-outline {
+          background: white;
+          border-color: #fee2e2;
+          color: #ef4444;
+        }
+        .btn-action.danger-outline:hover { background: #fef2f2; border-color: #ef4444; }
+
+        .btn-action.warning-outline {
+          background: white;
+          border-color: #fef3c7;
+          color: #d97706;
+        }
+        .btn-action.warning-outline:hover { background: #fffbeb; border-color: #f59e0b; }
+
+        .btn-action.info-outline {
+          background: white;
+          border-color: #e0e7ff;
+          color: #4f46e5;
+        }
+        .btn-action.info-outline:hover { background: #eef2ff; border-color: #6366f1; }
+
+        .btn-refresh {
+          background: white; border: 1px solid #cbd5e1; color: #475569;
+          padding: 6px 12px; borderRadius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+          display: flex; alignItems: center; gap: 6px; transition: 0.2s;
+        }
+        .btn-refresh:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
+
+        .group-card {
+          background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+          padding: 16px; display: flex; justify-content: space-between; alignItems: center;
+          transition: 0.2s;
+        }
+        .group-card:hover { border-color: #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .btn-delete-group {
+          background: #fff; border: 1px solid #fee2e2; color: #ef4444;
+          width: 32px; height: 32px; border-radius: 6px;
+          display: flex; alignItems: center; justifyContent: center;
+          cursor: pointer; transition: 0.2s;
+        }
+        .btn-delete-group:hover { background: #ef4444; color: white; }
+
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+      `}</style>
     </>
   );
 }
