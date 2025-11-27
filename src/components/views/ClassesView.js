@@ -1,62 +1,123 @@
-import { useState } from 'react';
+"use client";
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, Edit, Users } from 'lucide-react';
 import { useData } from '@/context/DataContext';
-import { Edit2, Trash, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
+import PasswordConfirmModal from '../modals/PasswordConfirmModal';
 
 export default function ClassesView({ onEdit }) {
-    const { data, remove } = useData();
-    const [search, setSearch] = useState("");
+  const { data, fetchClasses, deleteClass, loading } = useData();
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [classToDelete, setClassToDelete] = useState(null);
 
-    const filteredData = data.classes.filter(c => 
-        c.nombre.toLowerCase().includes(search.toLowerCase()) || c.codigo.toLowerCase().includes(search.toLowerCase())
-    );
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
-    return (
-         <div className="content-card">
-            <div className="card-header">
-                 <div className="filters">
-                    <input 
-                        type="text" 
-                        className="search-input" 
-                        placeholder="Buscar materia..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
-                <button className="btn btn-primary" onClick={() => onEdit('class', null)}>
-                    <Plus size={18}/> Nueva Clase
-                </button>
-            </div>
-            <div className="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style={{width: '15%'}}>CÓDIGO</th>
-                            <th style={{width: '25%'}}>NOMBRE</th>
-                            <th style={{width: '25%'}}>MAESTRO</th>
-                            <th style={{width: '15%'}}>ALUMNOS</th>
-                            <th style={{width: '20%', textAlign: 'right'}}>ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredData.map(c => {
-                            const teacher = data.teachers.find(t => t.id === c.maestroId);
-                            const studentCount = data.enrollments.filter(e => e.materiaId === c.id).length;
-                            return (
-                                <tr key={c.id}>
-                                    <td style={{fontWeight:600, color:'var(--text-muted)'}}>{c.codigo}</td>
-                                    <td><div style={{fontWeight:600, color:'var(--secondary)'}}>{c.nombre} {c.grado}{c.grupo}</div></td>
-                                    <td>{teacher ? teacher.nombre : <span style={{color:'#999'}}>Sin Asignar</span>}</td>
-                                    <td><span style={{background:'#f1f5f9', padding:'5px 12px', borderRadius:'20px', fontWeight:600}}>{studentCount}</span></td>
-                                    <td style={{textAlign: 'right'}}>
-                                        <button className="action-btn btn-edit" onClick={() => onEdit('class', c)}><Edit2 size={18}/></button>
-                                        <button className="action-btn btn-delete" onClick={() => { if(confirm('¿Borrar?')) remove('classes', c.id) }}><Trash size={18}/></button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+  const handleDeleteClick = (classItem) => {
+    setClassToDelete(classItem);
+    setPasswordModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (password) => {
+    try {
+      await deleteClass(classToDelete.clase_id, password);
+      toast.success('Clase eliminada exitosamente');
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  return (
+    <>
+      <div className="content-card">
+        <div className="card-header">
+          <h4>Gestión de Clases</h4>
+          <button onClick={() => onEdit('classes', null)} className="btn btn-primary">
+            <Plus size={18} />
+            Nueva Clase
+          </button>
         </div>
-    );
+
+        <div style={{ padding: '20px' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+              Cargando clases...
+            </div>
+          ) : data.classes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+              <p>No se encontraron clases</p>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nombre de la Clase</th>
+                    <th>Maestro</th>
+                    <th style={{ textAlign: 'center' }}>Alumnos</th>
+                    <th style={{ textAlign: 'center' }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.classes.map((classItem) => (
+                    <tr key={classItem.clase_id}>
+                      <td><strong>{classItem.codigo_clase}</strong></td>
+                      <td>{classItem.nombre_clase}</td>
+                      <td>
+                        {classItem.maestro_nombre} {classItem.maestro_apellido}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          background: '#f0f9ff',
+                          color: '#0369a1',
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '0.85rem',
+                          fontWeight: 600
+                        }}>
+                          <Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                          {classItem.total_alumnos || 0}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => onEdit('classes', classItem)}
+                            className="btn-icon-primary"
+                            title="Editar"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(classItem)}
+                            className="btn-icon-danger"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <PasswordConfirmModal
+        isOpen={passwordModalOpen}
+        onClose={() => {
+          setPasswordModalOpen(false);
+          setClassToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Eliminar Clase"
+        message={`Estás a punto de eliminar la clase "${classToDelete?.nombre_clase}". Todos los alumnos inscritos y registros de asistencia serán eliminados.`}
+      />
+    </>
+  );
 }
