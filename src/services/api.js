@@ -303,3 +303,20 @@ export const endOfYearService = {
     return response.data;
   }
 };
+
+// SERVICIOS DE ADMININS
+export const adminAuthService = {
+  // Recuperación de contraseña
+  forgotPassword: (email) => api.post('/auth/admin/forgot-password', { email }),
+  verifyResetCode: (email, codigo) => api.post('/auth/admin/verify-reset-code', { email, codigo }),
+  resetPassword: (email, codigo, newPassword) => api.post('/auth/admin/reset-password', { email, codigo, newPassword }),
+  
+  // Gestión de admins
+  getAll: () => api.get('/auth/admin/list'),
+  create: (data) => api.post('/auth/admin/register', data),
+  delete: (id) => api.delete(`/auth/admin/${id}`),
+  
+  // Perfil y cambio de contraseña
+  getProfile: () => api.get('/auth/admin/profile'),
+  changePassword: (currentPassword, newPassword) => api.post('/auth/admin/change-password', { currentPassword, newPassword }),
+};

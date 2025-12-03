@@ -10,15 +10,16 @@ import {
   UploadCloud, 
   LogOut,
   Calendar,
-  Lock  // ← SOLO AGREGAR ESTE IMPORT
+  Lock,
+  Shield  // 👈 NUEVO: Agregar Shield
 } from 'lucide-react';
-import { useState } from 'react';  // ← AGREGAR ESTE IMPORT
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import ChangePasswordModal from './modals/ChangePasswordModal';  // ← AGREGAR ESTE IMPORT
+import ChangePasswordModal from './modals/ChangePasswordModal';
 
 export default function Sidebar({ activeTab, setActiveTab, isOpen }) {
     const { user, logout } = useAuth();
-    const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);  // ← AGREGAR ESTE STATE
+    const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -27,6 +28,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen }) {
         { id: 'classes', label: 'Clases', icon: BookOpen },
         { id: 'enrollments', label: 'Inscripciones', icon: Layers },
         { id: 'notifications', label: 'Notificaciones', icon: Bell },
+        { id: 'admins', label: 'Administradores', icon: Shield }, // 👈 NUEVO
         { id: 'endofyear', label: 'Fin de Curso', icon: Calendar },
         { id: 'import', label: 'Importar CSV', icon: UploadCloud, sep: true },
     ];
@@ -67,7 +69,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen }) {
                         </li>
                     ))}
 
-                    {/* ↓ AGREGAR ESTE BOTÓN */}
+                    {/* Botón de Cambiar Contraseña */}
                     <li className="nav-item" style={{marginTop: 'auto', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.1)'}}>
                         <a 
                             className="nav-link"
@@ -109,7 +111,6 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen }) {
                 )}
             </aside>
 
-            {/* ↓ AGREGAR ESTE MODAL */}
             <ChangePasswordModal
                 isOpen={changePasswordModalOpen}
                 onClose={() => setChangePasswordModalOpen(false)}

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, UserCheck, Book, TrendingUp, X, PieChart, MousePointerClick, Upload, ClipboardList, Bell, RefreshCw } from 'lucide-react';
+import { Users, UserCheck, Book, TrendingUp, X, PieChart, MousePointerClick, Upload, ClipboardList, Bell, RefreshCw, Shield } from 'lucide-react'; // 👈 Agregado Shield
 import Sidebar from '@/components/Sidebar';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ import EnrollmentsView from '@/components/views/EnrollmentsView';
 import NotificationsView from '@/components/views/NotificationsView';
 import ImportView from '@/components/views/ImportView';
 import EndOfYearView from '@/components/views/EndOfYearView';
+import AdminsView from '@/components/views/AdminsView'; // 👈 NUEVO
 import EditStudentModal from '@/components/modals/EditStudentModal';
 import EditTeacherModal from '@/components/modals/EditTeacherModal';
 import EditClassModal from '@/components/modals/EditClassModal';
@@ -108,13 +109,22 @@ export default function DashboardPage() {
 
     const renderContent = () => {
         switch(activeTab) {
-            case 'students': return <StudentsView key={refreshKey} onEdit={openEditModal} />;
-            case 'teachers': return <TeachersView key={refreshKey} onEdit={openEditModal} />;
-            case 'classes': return <ClassesView key={refreshKey} onEdit={openEditModal} />;
-            case 'enrollments': return <EnrollmentsView key={refreshKey} onManage={openManager} />;
-            case 'notifications': return <NotificationsView onViewDetail={openDetail} />;
-            case 'import': return <ImportView />;
-            case 'endofyear': return <EndOfYearView />;    
+            case 'students': 
+                return <StudentsView key={refreshKey} onEdit={openEditModal} />;
+            case 'teachers': 
+                return <TeachersView key={refreshKey} onEdit={openEditModal} />;
+            case 'classes': 
+                return <ClassesView key={refreshKey} onEdit={openEditModal} />;
+            case 'enrollments': 
+                return <EnrollmentsView key={refreshKey} onManage={openManager} />;
+            case 'notifications': 
+                return <NotificationsView onViewDetail={openDetail} />;
+            case 'import': 
+                return <ImportView />;
+            case 'endofyear': 
+                return <EndOfYearView />;
+            case 'admins': // 👈 NUEVO
+                return <AdminsView key={refreshKey} />;
             case 'dashboard': 
             default:
                 return (
@@ -227,6 +237,15 @@ export default function DashboardPage() {
                                         <div style={{ background: '#fff7ed', padding: '8px', borderRadius: '8px', color: '#ea580c' }}><Bell size={20} /></div>
                                         Ver Notificaciones
                                     </button>
+                                    {/* 👇 NUEVO: Botón de acceso rápido a Admins */}
+                                    <button 
+                                        style={quickAccessBtnStyle} 
+                                        onClick={() => setActiveTab('admins')}
+                                        className="hover-card"
+                                    >
+                                        <div style={{ background: '#f3e8ff', padding: '8px', borderRadius: '8px', color: '#8b5cf6' }}><Shield size={20} /></div>
+                                        Administrar Usuarios
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -236,14 +255,11 @@ export default function DashboardPage() {
     };
 
     return (
-        // CORRECCIÓN FUNDAMENTAL DE LAYOUT
         <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', overflow: 'hidden' }}>
-            {/* 1. Sidebar: Estático, no fijo, para que ocupe espacio real en el flujo flex */}
             <div style={{ width: '250px', flexShrink: 0, height: '100vh', overflowY: 'auto' }}>
                 <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={true} />
             </div>
             
-            {/* 2. Main Content: Ocupa el resto, con scroll independiente */}
             <main style={{ 
                 flexGrow: 1, 
                 padding: '40px', 
@@ -261,10 +277,13 @@ export default function DashboardPage() {
                          activeTab === 'notifications' ? 'Notificaciones' :
                          activeTab === 'import' ? 'Importar Datos' :
                          activeTab === 'endofyear' ? 'Cierre de Ciclo Escolar' :
+                         activeTab === 'admins' ? 'Gestión de Administradores' : // 👈 NUEVO
                          activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                     </h2>
-                    <p style={{ color: '#030426', marginTop: '6px', fontSize: '0.95rem' }}>
-                        {activeTab === 'dashboard' ? 'Resumen general del sistema escolar' : 'Administra la información de la institución'}
+                    <p style={{ color: '#64748b', marginTop: '6px', fontSize: '0.95rem' }}>
+                        {activeTab === 'dashboard' ? 'Resumen general del sistema escolar' : 
+                         activeTab === 'admins' ? 'Administra los usuarios con acceso al panel' : // 👈 NUEVO
+                         'Administra la información de la institución'}
                     </p>
                 </header>
 
@@ -322,37 +341,29 @@ export default function DashboardPage() {
                 </div>
             )}
             <style jsx global>{`
-                /* --- ESTILOS DEL SCROLLBAR --- */
-                
-                /* Ancho del scrollbar vertical y alto del horizontal */
                 ::-webkit-scrollbar {
                     width: 6px;
                     height: 6px;
                 }
 
-                /* El fondo del riel (track) */
                 ::-webkit-scrollbar-track {
                     background: transparent; 
                 }
 
-                /* La barra que se mueve (thumb) */
                 ::-webkit-scrollbar-thumb {
-                    background: #cbd5e1; /* Color gris suave (slate-300) */
+                    background: #cbd5e1;
                     border-radius: 10px;
                 }
 
-                /* Al pasar el mouse por encima de la barra */
                 ::-webkit-scrollbar-thumb:hover {
-                    background: #94a3b8; /* Un poco más oscuro (slate-400) */
+                    background: #94a3b8;
                 }
 
-                /* Compatibilidad con Firefox */
                 * {
                     scrollbar-width: thin;
                     scrollbar-color: #cbd5e1 transparent;
                 }
 
-                /* --- TUS ESTILOS EXISTENTES --- */
                 .hover-scale:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
                 .hover-card:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateX(4px); }
                 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

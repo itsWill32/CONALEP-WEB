@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, UserCheck, Book, TrendingUp, X, PieChart, MousePointerClick, Upload, ClipboardList, Bell } from 'lucide-react';
+import { Users, UserCheck, Book, TrendingUp, X, PieChart, MousePointerClick, Upload, ClipboardList, Bell, RefreshCw, Shield } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ import EnrollmentsView from '@/components/views/EnrollmentsView';
 import NotificationsView from '@/components/views/NotificationsView';
 import ImportView from '@/components/views/ImportView';
 import EndOfYearView from '@/components/views/EndOfYearView';
+import AdminsView from '@/components/views/AdminsView'; // 👈 NUEVO
 import EditStudentModal from '@/components/modals/EditStudentModal';
 import EditTeacherModal from '@/components/modals/EditTeacherModal';
 import EditClassModal from '@/components/modals/EditClassModal';
@@ -22,9 +23,8 @@ export default function DashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
     
-    // Estado para controlar qué modal específico abrir
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalEntity, setModalEntity] = useState(null); // 'students', 'teachers', 'classes'
+    const [modalEntity, setModalEntity] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
 
     const [managerOpen, setManagerOpen] = useState(false);
@@ -48,7 +48,6 @@ export default function DashboardPage() {
         }
     }, [activeTab, user, authLoading]);
 
-    // Función unificada para abrir el modal correcto según la entidad
     const openEditModal = (entity, item) => {
         setModalEntity(entity);
         setEditingItem(item);
@@ -69,10 +68,10 @@ export default function DashboardPage() {
         setModalOpen(false);
         setModalEntity(null);
         setEditingItem(null);
-        setRefreshKey(prev => prev + 1); // Forzar recarga de la vista actual
+        setRefreshKey(prev => prev + 1);
     };
 
-    // --- ESTILOS DE DASHBOARD ---
+    // --- ESTILOS ---
     const statCardStyle = {
         background: 'white',
         borderRadius: '16px',
@@ -87,41 +86,21 @@ export default function DashboardPage() {
     };
 
     const statIconBoxStyle = (color, bg) => ({
-        background: bg,
-        color: color,
-        padding: '12px',
-        borderRadius: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        background: bg, color: color, padding: '12px', borderRadius: '12px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
     });
 
     const quickAccessBtnStyle = {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '16px',
-        background: 'white',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        textAlign: 'left',
-        color: '#475569',
-        fontSize: '0.95rem',
-        fontWeight: 600
+        display: 'flex', alignItems: 'center', gap: '12px', padding: '16px',
+        background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px',
+        cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'left',
+        color: '#475569', fontSize: '0.95rem', fontWeight: 600, width: '100%'
     };
 
     if (authLoading) {
         return (
-            <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                minHeight: '100vh', background: 'var(--bg-body)'
-            }}>
-                <div style={{textAlign: 'center'}}>
-                    <Loader2 className="spin" size={40} color="#3b82f6" style={{marginBottom: 16}} />
-                    <p style={{color: 'var(--text-muted)'}}>Verificando sesión...</p>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+                <div className="spin" style={{ border: '4px solid #e2e8f0', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: 40, height: 40 }}></div>
             </div>
         );
     }
@@ -130,69 +109,70 @@ export default function DashboardPage() {
 
     const renderContent = () => {
         switch(activeTab) {
-            case 'students': return <StudentsView key={refreshKey} onEdit={openEditModal} />;
-            case 'teachers': return <TeachersView key={refreshKey} onEdit={openEditModal} />;
-            case 'classes': return <ClassesView key={refreshKey} onEdit={openEditModal} />;
-            case 'enrollments': return <EnrollmentsView key={refreshKey} onManage={openManager} />;
-            case 'notifications': return <NotificationsView onViewDetail={openDetail} />;
-            case 'import': return <ImportView />;
-            case 'endofyear': return <EndOfYearView />;    
+            case 'students': 
+                return <StudentsView key={refreshKey} onEdit={openEditModal} />;
+            case 'teachers': 
+                return <TeachersView key={refreshKey} onEdit={openEditModal} />;
+            case 'classes': 
+                return <ClassesView key={refreshKey} onEdit={openEditModal} />;
+            case 'enrollments': 
+                return <EnrollmentsView key={refreshKey} onManage={openManager} />;
+            case 'notifications': 
+                return <NotificationsView onViewDetail={openDetail} />;
+            case 'import': 
+                return <ImportView />;
+            case 'endofyear': 
+                return <EndOfYearView />;
+            case 'admins': // 👈 NUEVO CASO
+                return <AdminsView key={refreshKey} />;
             case 'dashboard': 
             default:
                 return (
-                    <div id="dashboard-section" className="section">
-                        {/* Grid de Estadísticas (KPIs) */}
+                    <div className="animate-fade-in">
+                        {/* Grid de Estadísticas */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-                            
                             <div style={statCardStyle} className="hover-scale">
                                 <div>
                                     <p style={{ margin: '0 0 4px', fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Total Alumnos</p>
                                     <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700, color: '#1e293b' }}>{data.stats?.alumnos?.total || 0}</h3>
                                 </div>
-                                <div style={statIconBoxStyle('#3b82f6', '#eff6ff')}>
-                                    <Users size={24} />
-                                </div>
+                                <div style={statIconBoxStyle('#3b82f6', '#eff6ff')}><Users size={24} /></div>
                             </div>
-
                             <div style={statCardStyle} className="hover-scale">
                                 <div>
                                     <p style={{ margin: '0 0 4px', fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Total Maestros</p>
                                     <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700, color: '#1e293b' }}>{data.stats?.maestros?.total || 0}</h3>
                                 </div>
-                                <div style={statIconBoxStyle('#8b5cf6', '#f3e8ff')}>
-                                    <UserCheck size={24} />
-                                </div>
+                                <div style={statIconBoxStyle('#8b5cf6', '#f3e8ff')}><UserCheck size={24} /></div>
                             </div>
-
                             <div style={statCardStyle} className="hover-scale">
                                 <div>
                                     <p style={{ margin: '0 0 4px', fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Clases Activas</p>
                                     <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700, color: '#1e293b' }}>{data.stats?.clases?.total || 0}</h3>
                                 </div>
-                                <div style={statIconBoxStyle('#10b981', '#ecfdf5')}>
-                                    <Book size={24} />
-                                </div>
+                                <div style={statIconBoxStyle('#10b981', '#ecfdf5')}><Book size={24} /></div>
                             </div>
-
                             <div style={statCardStyle} className="hover-scale">
                                 <div>
                                     <p style={{ margin: '0 0 4px', fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Notificaciones</p>
                                     <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700, color: '#1e293b' }}>{data.stats?.notificaciones_pendientes || 0}</h3>
                                     <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 600 }}>Pendientes</span>
                                 </div>
-                                <div style={statIconBoxStyle('#f59e0b', '#fffbeb')}>
-                                    <TrendingUp size={24} />
-                                </div>
+                                <div style={statIconBoxStyle('#f59e0b', '#fffbeb')}><Bell size={24} /></div>
                             </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '25px' }}>
-                            
-                            {/* Tarjeta: Distribución de Alumnos */}
-                            <div className="content-card" style={{ borderRadius: '20px', border: '1px solid #e2e8f0', padding: 0, overflow: 'hidden' }}>
-                                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <PieChart size={20} color="#64748b" />
-                                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>Distribución por Grupo</h4>
+                            {/* Distribución */}
+                            <div className="content-card" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', padding: 0, overflow: 'hidden', backgroundColor: 'white' }}>
+                                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <PieChart size={20} color="#64748b" />
+                                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>Distribución por Grupo</h4>
+                                    </div>
+                                    <button onClick={fetchStats} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }} title="Actualizar">
+                                        <RefreshCw size={16} className={loading ? 'spin' : ''} />
+                                    </button>
                                 </div>
                                 {data.stats?.distribucion_alumnos && data.stats.distribucion_alumnos.length > 0 ? (
                                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
@@ -226,8 +206,8 @@ export default function DashboardPage() {
                                 )}
                             </div>
 
-                            {/* Tarjeta: Accesos Rápidos */}
-                            <div className="content-card" style={{ borderRadius: '20px', border: '1px solid #e2e8f0', padding: 0, overflow: 'hidden' }}>
+                            {/* Accesos Rápidos */}
+                            <div className="content-card" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', padding: 0, overflow: 'hidden', backgroundColor: 'white' }}>
                                 <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <MousePointerClick size={20} color="#64748b" />
                                     <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>Accesos Rápidos</h4>
@@ -257,6 +237,15 @@ export default function DashboardPage() {
                                         <div style={{ background: '#fff7ed', padding: '8px', borderRadius: '8px', color: '#ea580c' }}><Bell size={20} /></div>
                                         Ver Notificaciones
                                     </button>
+                                    {/* 👇 NUEVO: Acceso rápido a Admins */}
+                                    <button 
+                                        style={quickAccessBtnStyle} 
+                                        onClick={() => setActiveTab('admins')}
+                                        className="hover-card"
+                                    >
+                                        <div style={{ background: '#f3e8ff', padding: '8px', borderRadius: '8px', color: '#8b5cf6' }}><Shield size={20} /></div>
+                                        Administrar Usuarios
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -265,25 +254,51 @@ export default function DashboardPage() {
         }
     };
 
+    // 👇 FUNCIÓN PARA OBTENER EL TÍTULO DINÁMICO
+    const getPageTitle = () => {
+        switch(activeTab) {
+            case 'dashboard': return 'Panel de Control';
+            case 'students': return 'Gestión de Alumnos';
+            case 'teachers': return 'Gestión de Maestros';
+            case 'classes': return 'Gestión de Clases';
+            case 'enrollments': return 'Inscripciones';
+            case 'notifications': return 'Notificaciones';
+            case 'import': return 'Importar Datos';
+            case 'endofyear': return 'Cierre de Ciclo Escolar';
+            case 'admins': return 'Gestión de Administradores'; // 👈 NUEVO
+            default: return activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+        }
+    };
+
+    const getPageSubtitle = () => {
+        switch(activeTab) {
+            case 'dashboard': return 'Resumen general del sistema escolar';
+            case 'admins': return 'Administra los usuarios con acceso al panel'; // 👈 NUEVO
+            default: return 'Administra la información de la institución';
+        }
+    };
+
     return (
-        <div style={{display:'flex'}}>
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={true} />
+        <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', overflow: 'hidden' }}>
+            {/* 1. Sidebar */}
+            <div style={{ width: '250px', flexShrink: 0, height: '100vh', overflowY: 'auto' }}>
+                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={true} />
+            </div>
             
-            <main className="main-content" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
+            {/* 2. Main Content */}
+            <main style={{ 
+                flexGrow: 1, 
+                padding: '40px', 
+                overflowY: 'auto', 
+                height: '100vh',
+                marginLeft: 10
+            }}>
                 <header style={{ marginBottom: '30px' }}> 
                     <h2 id="page-title" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
-                        {activeTab === 'dashboard' ? 'Panel de Control' : 
-                         activeTab === 'students' ? 'Gestión de Alumnos' :
-                         activeTab === 'teachers' ? 'Gestión de Maestros' :
-                         activeTab === 'classes' ? 'Gestión de Clases' :
-                         activeTab === 'enrollments' ? 'Inscripciones' :
-                         activeTab === 'notifications' ? 'Notificaciones' :
-                         activeTab === 'import' ? 'Importar Datos' :
-                         activeTab === 'endofyear' ? 'Cierre de Ciclo Escolar' :
-                         activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                        {getPageTitle()}
                     </h2>
-                    <p style={{ color: '#64748b', marginTop: '4px', fontSize: '0.95rem' }}>
-                        {activeTab === 'dashboard' ? 'Bienvenido al sistema de gestión escolar' : 'Administra la información de tu institución'}
+                    <p style={{ color: '#64748b', marginTop: '6px', fontSize: '0.95rem' }}>
+                        {getPageSubtitle()}
                     </p>
                 </header>
 
@@ -341,6 +356,31 @@ export default function DashboardPage() {
                 </div>
             )}
             <style jsx global>{`
+                /* --- ESTILOS DEL SCROLLBAR --- */
+                ::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+
+                ::-webkit-scrollbar-track {
+                    background: transparent; 
+                }
+
+                ::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 10px;
+                }
+
+                ::-webkit-scrollbar-thumb:hover {
+                    background: #94a3b8;
+                }
+
+                * {
+                    scrollbar-width: thin;
+                    scrollbar-color: #cbd5e1 transparent;
+                }
+
+                /* --- ESTILOS EXISTENTES --- */
                 .hover-scale:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
                 .hover-card:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateX(4px); }
                 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
